@@ -1,6 +1,14 @@
 import express from 'express';
+import 'dotenv/config';
+import { router } from './routes';
+
 const server = express();
-server.get('/', (_, res) => {
-  return res.send('Ola Dev!'),
+
+server.use(express.json(), (req, res, next) =>{
+  console.log('middleware executado');
+  
+  next();
 });
-export { server }; 
+server.use(router);
+
+export { server };
