@@ -22,7 +22,6 @@ router.post('/teste', (_, res) => {
 
 });
 
-
 router.put('/teste2', (_, res) => {
 
   try {
