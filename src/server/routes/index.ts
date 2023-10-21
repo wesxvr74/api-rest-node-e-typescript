@@ -1,26 +1,17 @@
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { CidadesController } from './../controllers';
+
 const router = Router();
 
 router.get('/', (_, res) => {
 
-  return res.status(StatusCodes.OK).send('Get Funcionante');
-});
-
-
-router.post('/teste', (_, res) => {
-
-  try {
-
-    return res.status(StatusCodes.BAD_REQUEST).json("ohoo Noooow");
-
-  } catch {
-
-    return res.status(StatusCodes.OK).send('You Winn!');
-
-  }
+  return res.status(StatusCodes.OK).send('wahoo');
 
 });
+
+router.post('/cidades', (CidadesController.create));
+
 
 router.put('/teste2', (_, res) => {
 
@@ -33,6 +24,6 @@ router.put('/teste2', (_, res) => {
     return res.status(StatusCodes.OK).send('Updated!');
 
   }
-})
+});
 
-export {router};
+export { router };
