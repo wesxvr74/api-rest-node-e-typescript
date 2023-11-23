@@ -4,16 +4,11 @@ import { CidadesController } from './../controllers';
 
 const router = Router();
 
-router.get('/', (_, res) => {
+router.get('/cidades', (CidadesController.createBodyValidator, CidadesController.createQueryValidation));
 
-  return res.status(StatusCodes.OK).send('wahoo');
+router.post('/cidades', (CidadesController.createBodyValidator));
 
-});
-
-router.post('/cidades', (CidadesController.create));
-
-
-router.put('/teste2', (_, res) => {
+router.put('/teste', (_, res) => {
 
   try {
 
