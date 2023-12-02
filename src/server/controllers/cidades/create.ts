@@ -1,4 +1,4 @@
-import { RequestHandler, Request, Response, NextFunction } from 'express';
+import { Request, RequestHandler, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import * as yup from 'yup';
 import { validation } from '../../shared/middleware';
@@ -8,7 +8,7 @@ interface ICidadeRequest {
   pais: string;
 }
 
-const bodyValidation: yup.Schema= yup.object().shape({
+const bodyValidation: yup.Schema<ICidadeRequest>= yup.object().shape({
 
   cidade: yup.string().required().defined().min(3),
   pais: yup.string().required().defined().min(3)
@@ -16,26 +16,32 @@ const bodyValidation: yup.Schema= yup.object().shape({
 });
 
 export const createBodyValidator: RequestHandler = async (req, res, _next) => {
-  
+
   try {
-    await bodyValidation.validate(req.body, { abortEarly: true });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
-    const create = (req: Request<{},{}, ICidadeRequest>, res: Response, next: NextFunction) => {  
-    };
+    await bodyValidation.validate(req.body, { abortEarly: false });
+
     return _next();
+
   } catch (err) {
+
     const yupError = err as yup.ValidationError;
     const errors: Record <string, string> = {};
 
     yupError.inner.forEach(error => {
       if (!error.path) return;
       errors[error.path] = error.message;
-  
     }); 
-    return res.status(StatusCodes.BAD_REQUEST).json({ Error });
+
+    return res.status(StatusCodes.BAD_REQUEST).json({ 
+      errors });
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const create: RequestHandler = async (req: Request<{},{}, ICidadeRequest>, res: Response)=>{
+  console.log(req.body);
+  return res.send('Sucess!');
+};
 interface Ifilter {
     filter?: string;
 }
@@ -57,8 +63,8 @@ export const createQueryValidation: RequestHandler = async (req, res, _next) => 
       if (!error.path) return;
       errors[error.path] = error.message;
     }); 
-    return res.status(StatusCodes.BAD_REQUEST).json({ Error });
+    return res.status(StatusCodes.BAD_REQUEST).json({ errors });
   }
 };
 
-export const createValidation = validation();
+export const createValidation = validation(queryValidation);

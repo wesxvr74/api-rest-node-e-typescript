@@ -4,7 +4,7 @@ import { CidadesController } from './../controllers';
 
 const router = Router();
 
-router.get('/cidades', (CidadesController.createBodyValidator, CidadesController.createQueryValidation));
+router.get('/cidades', (CidadesController.createBodyValidator));
 
 router.post('/cidades', (CidadesController.createBodyValidator));
 
