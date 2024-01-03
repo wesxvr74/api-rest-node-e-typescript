@@ -6,7 +6,10 @@ const router = Router();
 
 router.get('/cidades', (CidadesController.createBodyValidator));
 
-router.post('/cidades', (CidadesController.createBodyValidator));
+router.post('/cidades', (    
+  CidadesController.createBodyValidator,
+  CidadesController.createValidation
+));
 
 router.put('/teste', (_, res) => {
 

@@ -1,27 +1,36 @@
-import { RequestHandler } from 'express';
-import { StatusCodes } from 'http-status-codes';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 import * as yup from 'yup';
 
-type TValidation = (scheme: yup.AnySchema) => RequestHandler;
+type TProperty = 'body' | 'query' | 'params' | 'header';
 
-export const validation: TValidation = (scheme) => async (req, res, next) => {
+type TAllSchemas = Record<TProperty, yup.Schema<any>>;
+
+export type TValidation = (Schemas: Partial<TAllSchemas>) => RequestHandler;
+
+export const validation: TValidation = (Schemas) => async (req: Request, res: Response, next: NextFunction) => {
   
-  try {
-    await scheme.validate(req.query, { abortEarly: false });
+  const errorsResult: Partial<Record<TProperty, Record<string, string>>> = {};
 
-    return next();
+  Object.entries(Schemas).forEach(([key, schema]: [string, yup.Schema<any>]) => {
+    try {
+      schema.validateSync(req[key as TProperty], { abortEarly: false });
+    } catch (err) {
+      const yupError = err as yup.ValidationError;
+      const errors: Record<string, string> = {};
 
-  } catch (err) {
+      yupError.inner.forEach((error) => {
+        if (!error.path) return;
+        errors[error.path] = error.message;
+      });
 
-    const yupError = err as yup.ValidationError;
-    const errors: Record <string, string> = {};
-
-    yupError.inner.forEach(error => {
-      if (!error.path) return;
-      errors[error.path] = error.message;
-    }); 
-
-    return res.status(StatusCodes.BAD_REQUEST).json({ 
-      errors });
+      errorsResult[key as TProperty] = errors;
+    }
+  });
+  if (Object.keys(errorsResult).length > 0) {
+    return res.status(400).json({ errors: errorsResult });
   }
+
+  next();
 };
