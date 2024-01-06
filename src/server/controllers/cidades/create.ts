@@ -1,34 +1,26 @@
-import { Request, RequestHandler, Response } from 'express';
+import { Request, Response } from 'express';
 import * as yup from 'yup';
 import { validation } from '../../shared/middleware';
-
-interface ICidadeRequest {
+import { StatusCodes } from 'http-status-codes';
+export interface ICidade {
   cidade: string;
   pais: string;
 }
+interface IFilter{
+  filter?: string;
+}
 
-export const createBodyValidator = validation({
-  body: yup.object().shape({
+export const createValidator = validation((getSchema) => ({
+  body: getSchema<ICidade>(yup.object().shape({
     cidade: yup.string().required().defined().min(3),
-    pais: yup.string().required().defined().min(3)  
-  }),
-  query: yup.object().shape({
-    filter: yup.string().required().min(3),
-  }),
-});
+    pais: yup.string().required().defined().min(3)
+  })),
+  query: getSchema<IFilter>(yup.object().shape({
+    filter: yup.string().optional().min(3),
+  }))
+}));
 
-export const createValidation = validation({
-  body: yup.object().shape({
-    cidade: yup.string().required().defined().min(3),
-    pais: yup.string().required().defined().min(3)  
-  }),
-  query: yup.object().shape({
-    filter: yup.string().required().min(3),
-  }),
-});
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export const create: RequestHandler = async (req: Request<{},{}, ICidadeRequest>, res: Response)=>{
+export const create= async (req: Request<object,object, ICidade>, res: Response)=>{
   console.log(req.body);
-  return res.send('Sucess!');
+  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Não Implementado');
 };

@@ -1,36 +1,44 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextFunction, Request, RequestHandler, Response } from 'express';
-import * as yup from 'yup';
+import { RequestHandler } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import { AnyObject, Maybe, ObjectSchema, ValidationError } from 'yup';
 
-type TProperty = 'body' | 'query' | 'params' | 'header';
+type TProperty = 'body' | 'header' | 'params' | 'query';
 
-type TAllSchemas = Record<TProperty, yup.Schema<any>>;
+type TGetSchema = <T extends Maybe<AnyObject>>(schema: ObjectSchema<T>) => ObjectSchema<T>
 
-export type TValidation = (Schemas: Partial<TAllSchemas>) => RequestHandler;
+type TAllSchemas = Record<TProperty, ObjectSchema<AnyObject>>;
 
-export const validation: TValidation = (Schemas) => async (req: Request, res: Response, next: NextFunction) => {
-  
-  const errorsResult: Partial<Record<TProperty, Record<string, string>>> = {};
+type TGetAllSchemas = (getSchema: TGetSchema) => Partial<TAllSchemas>;
 
-  Object.entries(Schemas).forEach(([key, schema]: [string, yup.Schema<any>]) => {
+type TValidation = (getAllSchemas: TGetAllSchemas) => RequestHandler;
+
+
+export const validation: TValidation = (getAllSchemas) => async (req, res, next) => {
+  const schemas = getAllSchemas((schema) => schema);
+
+
+  const errorsResult: Record<string, Record<string, string>> = {};
+
+  Object.entries(schemas).forEach(([key, schema]) => {
     try {
       schema.validateSync(req[key as TProperty], { abortEarly: false });
     } catch (err) {
-      const yupError = err as yup.ValidationError;
+      const yupError = err as ValidationError;
       const errors: Record<string, string> = {};
 
-      yupError.inner.forEach((error) => {
-        if (!error.path) return;
+      yupError.inner.forEach(error => {
+        if (error.path === undefined) return;
         errors[error.path] = error.message;
       });
 
-      errorsResult[key as TProperty] = errors;
+      errorsResult[key] = errors;
     }
   });
-  if (Object.keys(errorsResult).length > 0) {
-    return res.status(400).json({ errors: errorsResult });
-  }
 
-  next();
+
+  if (Object.entries(errorsResult).length === 0) {
+    return next();
+  } else {
+    return res.status(StatusCodes.BAD_REQUEST).json({ errors: errorsResult });
+  }
 };

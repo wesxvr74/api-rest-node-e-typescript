@@ -6,7 +6,6 @@ import { router } from './routes';
 const server = express();
 
 server.use(express.json(), (req, res, next) =>{
-  console.log('middleware executado');
   
   next();
 });
